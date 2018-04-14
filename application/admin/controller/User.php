@@ -7,6 +7,7 @@ use think\Controller;
 use think\Request;
 use think\facade\Config;
 use think\facade;
+use think\Db;
 class User extends Controller
 {
     /**
@@ -241,4 +242,18 @@ class User extends Controller
         dump($this->request->get());
     }
 
+
+    /*
+     * 数据库操作
+     */
+    public function conn(){
+
+        //全局配置 config/database.php
+        $userName= Db::table('acm_userdb')->where('id',1)->value('userName');
+        return $userName;
+
+
+        //动态配置
+        //dsn连接
+    }
 }
