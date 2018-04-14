@@ -140,4 +140,37 @@ class User extends Controller
         config('app_debug',false);
         dump(config('app_debug'));
     }
+
+
+    /**
+     * @Desc:容器与依赖注入的管理
+     * 1.任何URL的访问，最终都是定位到控制器，由控制器中的某个具体方法执行
+     * 2.一个控制器对应着一个类，如果这些控制器需要统一管理，怎么办？
+     * 容器进行管理，还可以将类的实例(对象)进行管理，传递给类方法，自动触发依赖注入
+     * 依赖注入：将对象类型的数据，以参数的形式传递给方法的参数列表
+     * URL访问：以get形式将数据传递到控制器指定方法中
+     * @author:guomin
+     * @date:
+     * @param string $name
+     * @return string
+     */
+    public function Container($name='lee'){
+
+        return 'hello'.$name;
+
+    }
+
+    /*
+     * 依赖注入
+     */
+
+    public function getMethod(\app\common\common $common)
+    {
+
+        $common->setName('aaaa');
+
+        return $common->getName();
+
+    }
+
 }
