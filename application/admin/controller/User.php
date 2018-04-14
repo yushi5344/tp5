@@ -1,10 +1,12 @@
 <?php
 
 namespace app\admin\controller;
+use app\common\testfacade;
 use think\Container;
 use think\Controller;
 use think\Request;
 use think\facade\Config;
+use think\facade;
 class User extends Controller
 {
     /**
@@ -200,5 +202,31 @@ class User extends Controller
 
         return Container::get('demo',['demo'=>'demo的值在这里显示']);
     }
+
+
+    /*
+     * facade静态代理
+     *
+     */
+    public function facade(){
+
+
+        //常规调用方法
+       // $testfacade=new testfacade();
+
+        //return $testfacade->index();
+
+        //静态代理调用方法
+
+      // return \app\facade\testfacade::index('guomin');
+
+        //使用动态绑定的方法绑定到facade
+
+        Facade::bind('app\facade\testfacade','app\common\testfacade');
+
+        return \app\facade\testfacade::index('aaa');
+
+    }
+
 
 }
