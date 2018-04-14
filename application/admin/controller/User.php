@@ -124,4 +124,20 @@ class User extends Controller
         Config::set('app_debug',false);
         dump(Config::get('app_debug'));
     }
+
+    /**
+     * @Desc:助手函数
+     * @author:guomin
+     * @date:2018-04-14 9:38
+     */
+
+    public function helperConfig(){
+
+        //使用助手函数config
+        //助手函数是不依赖COnfig类的
+        //dump(config());
+        dump(config('app_debug'));//true
+        config('app_debug',false);
+        dump(config('app_debug'));
+    }
 }
