@@ -4,7 +4,7 @@ namespace app\admin\controller;
 
 use think\Controller;
 use think\Request;
-
+use think\facade\Config;
 class User extends Controller
 {
     /**
@@ -82,5 +82,46 @@ class User extends Controller
     public function delete($id)
     {
         //
+    }
+
+    public function getConfig(){
+        //获取所有配置
+        //$config=Config::get();
+        //dump($config);
+        //获取app下的配置项
+        //$confapp=Config::get('app.');
+       // dump($confapp);
+
+        //获取一级配置项  推荐使用pull
+        //$configfirst=Config::pull('log');
+        //dump($configfirst);
+
+        //获取二级配置
+        //$configsecond=Config::get('app.app_debug');
+
+        //dump($configsecond);
+
+        //app是默认的  可以不写
+        //$configsecond=Config::get('app_debug');
+
+        //dump($configsecond);
+
+        //判断是否有这个配置项
+        //$confhas=Config::has('defalu_lang');
+       // dump($confhas);
+
+        //查询database下的配置内容
+        $configdata=Config::pull('database');
+        dump($configdata);
+    }
+
+
+    public function setConfig(){
+        $app_debug=Config::get('app_debug');
+        dump($app_debug);
+
+        //动态改变配置项
+        Config::set('app_debug',false);
+        dump(Config::get('app_debug'));
     }
 }
