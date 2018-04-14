@@ -1,7 +1,7 @@
 <?php
 
 namespace app\admin\controller;
-
+use think\Container;
 use think\Controller;
 use think\Request;
 use think\facade\Config;
@@ -171,6 +171,34 @@ class User extends Controller
 
         return $common->getName();
 
+    }
+
+
+    /*
+     * 绑定一个类到容器中
+     */
+    public function bindClass(){
+
+
+        Container::set('common','\app\common\common');
+
+        $common=Container::get('common',['name'=>'leee']);
+
+        return $common->getName();
+    }
+
+
+
+    /*
+     * 绑定一个闭包到容器中
+     */
+    public function bindClosure(){
+
+        Container::set('demo',function($demo){
+            return $demo;
+        });
+
+        return Container::get('demo',['demo'=>'demo的值在这里显示']);
     }
 
 }
