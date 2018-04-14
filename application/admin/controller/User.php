@@ -8,6 +8,7 @@ use think\Request;
 use think\facade\Config;
 use think\facade;
 use think\Db;
+use app\admin\model\Acm_userdb;
 class User extends Controller
 {
     /**
@@ -255,5 +256,21 @@ class User extends Controller
 
         //动态配置
         //dsn连接
+    }
+
+
+    public function getUser(){
+
+      //  $user=Acm_userdb::get(1);
+
+
+
+        //用查询构造器创建更加复杂的查询
+
+        $user=Acm_userdb::field(['id'=>'编号','realName'=>'真实姓名'])->where('id',37)->find();
+
+
+        dump($user);
+
     }
 }
