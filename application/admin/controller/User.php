@@ -229,4 +229,16 @@ class User extends Controller
     }
 
 
+    /*
+     * Request请求几种方式
+     * 1.依赖注入 Request $request
+     * 2.直接new Request
+     * 3.继承父类Controller 使用$this->reuest
+     */
+
+    public function getRequest(){
+
+        dump($this->request->get());
+    }
+
 }
