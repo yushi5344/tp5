@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 use think\Controller;
+use app\admin\model\Acm_userdb;
 class Display extends Controller{
 
 
@@ -63,4 +64,13 @@ class Display extends Controller{
         return $this->view->fetch();
     }
 
+
+    public function showData(){
+
+        $res=Acm_userdb::paginate(5);
+
+        $this->view->assign('res',$res);
+
+        return $this->view->fetch();
+    }
 }
