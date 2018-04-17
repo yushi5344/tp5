@@ -79,4 +79,9 @@ class Display extends Controller{
 
         return $this->view->fetch();
     }
+
+    public function extendUi(){
+        return $this->view->fetch();
+    }
+
 }
