@@ -31,4 +31,26 @@ class Validatedata extends Controller{
        }
        */
     }
+
+    public function validates(){
+        //验证数据
+        $data=[
+            'name'=>'guomin',
+            'email'=>'424242qq.com',
+            'password'=>'222222',
+            'mobile'=>17092559941
+        ];
+
+
+        //验证规则
+        $validate='app\validate\User';
+        $res=$this->validate($data,$validate);
+        if(true!==$res){
+            return $res;
+        }else{
+
+            return '通过';
+
+        }
+    }
 }
