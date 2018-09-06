@@ -1,156 +1,305 @@
-ThinkPHP 5.1
-===============
-
-ThinkPHP5.1对底层架构做了进一步的改进，减少依赖，其主要特性包括：
-
- + 采用容器统一管理对象
- + 支持Facade
- + 注解路由支持
- + 路由跨域请求支持
- + 配置和路由目录独立
- + 取消系统常量
- + 助手函数增强
- + 类库别名机制
- + 增加条件查询
- + 改进查询机制
- + 配置采用二级
- + 依赖注入完善
- + 中间件支持（V5.1.6+）
+# ThinkPHP 5.1 #
 
 
-> ThinkPHP5的运行环境要求PHP5.6以上。
+## 获取配置 ##
+- 获取全部配置
+		$config=Config::get();
+- 获取app下的配置项
+		$conapp=Config::get('app');
+- 获取一级配置项
+		$configfirst=Config::pull('log');
+- 获取二级配置项
+		$configsecond=Config::get('app.app_debug');
+- app默认，可以不写
+		$configsecond=Config::get('app_dubug');
+- 判断是否有这个配置项
+		$confighas=Config::has('defalut_lang');
+-  查询database下的配置内容
+		$configdata=Config::pull('database');
+- 动态改变配置项
+		Config::set('app_debug',false);
+- 也可以使用助手函数config来动态设置和获取配置项
+	- 设置
+			config('app_debug',false);
+	-  获取
+			config('app_debug');
+
+## php经典三大模式 ##
+- 单例模式
+		namespace singleTon {
+		    class single
+		    {
+		        public $siteName;
+		        private static $instance;
+		
+		        private function __construct($siteName)
+		        {
+		            $this->siteName = $siteName;
+		        }
+		
+		        private function __clone()
+		        {
+		            trigger_error('Clone is not allowed', E_USER_ERROR);
+		        }
+		
+		        static public function singleTon($siteName = '百度')
+		        {
+		            if (!isset(self::$instance)) {
+		                self::$instance = new self($siteName);
+		            }
+		            return self::$instance;
+		        }
+		
+		    }
+		}
+- 工厂模式
+		namespace Factory {
+		
+		    use singleTon\single;
+		    class Factory
+		    {
+		        public static function create($siteName)
+		        {
+		            return single::singleTon($siteName);
+		        }
+		    }
+		}
+- 对象注册树
+	namespace RegisterTree {
+	    
+	    class RegisterTree
+	    {
+	        //创建对象池
+	        private static $objs = [];
+	        //生成对象并上树
+	        public static function set($alis, $obj)
+	        {
+	            self::$objs[$alis] = $obj;
+	        }
+	        //从树上面取下对象
+	        public static function get($alas)
+	        {
+	            return self::$objs[$alas];
+	        }
+	        //销毁对象
+	        public static function _unset($alas)
+	        {
+	            unset(self::$objs[$alas]);
+	        }
+	    }
+	}
+- 对象访问
+		namespace run {
+		
+		    use Factory\Factory;
+		    use RegisterTree\RegisterTree;
+		
+		    $factory = Factory::create('谷歌');
+		    //创建对象
+		    RegisterTree::set('site', $factory);
+		    //获取对象
+		    $obj = RegisterTree::get('site');
+		    //访问对象值
+		    $siteName=$obj->siteName;
+		
+		    var_dump($siteName);
+		}
+
+## trait类 ##
+利用trait类实现php多继承，提高了代码的复用性
+trait类 demo1
+
+	namespace demo1{
+	    trait demo1{
+	        public function m1(){
+	            return __METHOD__;
+	        }
+	    }
+	}
+
+trait类 demo2
+
+	namespace demo2{
+	    trait demo2{
+	        public function m2(){
+	            return __METHOD__;
+	        }
+	    }
+	}
+
+利用trait类实现多继承
+
+	namespace demo{
+	    use demo1\demo1;
+	    use demo2\demo2;
+	    class demo{
+	        use demo1,demo2;
+	        public function dm1(){
+	            return __METHOD__;
+	        }
+	        public function dm2(){
+	            return $this->m1();
+	        }
+	
+	        public function dm3(){
+	            return $this->m2();
+	        }
+	    }
+	
+	    $demo=new demo();
+	    echo $demo->dm1();
+	    echo '<br/>';
+	    echo $demo->dm2();
+	    echo '<br/>';
+	    echo $demo->dm3();
+	}
+
+打印结果
+
+	demo\demo::dm1
+	demo1\demo1::m1
+	demo2\demo2::m2
+
+## trait类访问优先级 ##
+1. 如果当前类有这个方法，则访问当前类；
+2. 如果当前类没有这个方法，则访问trait类；
+3. 如果trait类没有这个方法，则访问父类同名方法
 
 
-## 目录结构
+	trait demo1{
+	    public function m2(){
+	        return __METHOD__;
+	    }
+	}
+	trait demo2{
+	    public function m1(){
+	        return __METHOD__;
+	    }
+	
+	}
+	class demoP{
+	    public function m(){
+	        return __METHOD__;
+	
+	    }
+	}
+	class demo extends demoP{}
+	$demo= new demo();
+	echo $demo->m();
 
-初始的目录结构如下：
+输出结果
 
-~~~
-www  WEB部署目录（或者子目录）
-├─application           应用目录
-│  ├─common             公共模块目录（可以更改）
-│  ├─module_name        模块目录
-│  │  ├─common.php      模块函数文件
-│  │  ├─controller      控制器目录
-│  │  ├─model           模型目录
-│  │  ├─view            视图目录
-│  │  └─ ...            更多类库目录
-│  │
-│  ├─command.php        命令行定义文件
-│  ├─common.php         公共函数文件
-│  └─tags.php           应用行为扩展定义文件
-│
-├─config                应用配置目录
-│  ├─module_name        模块配置目录
-│  │  ├─database.php    数据库配置
-│  │  ├─cache           缓存配置
-│  │  └─ ...            
-│  │
-│  ├─app.php            应用配置
-│  ├─cache.php          缓存配置
-│  ├─cookie.php         Cookie配置
-│  ├─database.php       数据库配置
-│  ├─log.php            日志配置
-│  ├─session.php        Session配置
-│  ├─template.php       模板引擎配置
-│  └─trace.php          Trace配置
-│
-├─route                 路由定义目录
-│  ├─route.php          路由定义
-│  └─...                更多
-│
-├─public                WEB目录（对外访问目录）
-│  ├─index.php          入口文件
-│  ├─router.php         快速测试文件
-│  └─.htaccess          用于apache的重写
-│
-├─thinkphp              框架系统目录
-│  ├─lang               语言文件目录
-│  ├─library            框架类库目录
-│  │  ├─think           Think类库包目录
-│  │  └─traits          系统Trait目录
-│  │
-│  ├─tpl                系统模板目录
-│  ├─base.php           基础定义文件
-│  ├─console.php        控制台入口文件
-│  ├─convention.php     框架惯例配置文件
-│  ├─helper.php         助手函数文件
-│  ├─phpunit.xml        phpunit配置文件
-│  └─start.php          框架入口文件
-│
-├─extend                扩展类库目录
-├─runtime               应用的运行时目录（可写，可定制）
-├─vendor                第三方类库目录（Composer依赖库）
-├─build.php             自动生成定义文件（参考）
-├─composer.json         composer 定义文件
-├─LICENSE.txt           授权说明文件
-├─README.md             README 文件
-├─think                 命令行入口文件
-~~~
+	demoP::m
 
-> router.php用于php自带webserver支持，可用于快速测试
-> 切换到public目录后，启动命令：php -S localhost:8888  router.php
-> 上面的目录结构和名称是可以改变的，这取决于你的入口文件和配置参数。
+## 依赖注入 ##
++  任何URL的访问，最终都是定位到控制器，由控制器中的某个具体方法执行
++  一个控制器对应着一个类，如果这些控制器需要统一管理，怎么办？
++  使用容器进行管理，还可以将类的实例进行管理，传递给类方法，自动触发依赖注入
++  依赖注入： 将对象类型的数据，以参数的形式传递给方法的参数列表
++  URL访问 以get形式将数据传递给控制器指定方法中
 
-## 升级指导
 
-原有下面系统类库的命名空间需要调整：
+依赖注入
 
-* think\App      => think\facade\App （或者 App ）
-* think\Cache    => think\facade\Cache （或者 Cache ）
-* think\Config   => think\facade\Config （或者 Config ）
-* think\Cookie   => think\facade\Cookie （或者 Cookie ）
-* think\Debug    => think\facade\Debug （或者 Debug ）
-* think\Hook     => think\facade\Hook （或者 Hook ）
-* think\Lang     => think\facade\Lang （或者 Lang ）
-* think\Log      => think\facade\Log （或者 Log ）
-* think\Request  => think\facade\Request （或者 Request ）
-* think\Response => think\facade\Reponse （或者 Reponse ）
-* think\Route    => think\facade\Route （或者 Route ）
-* think\Session  => think\facade\Session （或者 Session ）
-* think\Url      => think\facade\Url （或者 Url ）
 
-原有的配置文件config.php 拆分为app.php cache.php 等独立配置文件 放入config目录。
-原有的路由定义文件route.php 移动到route目录
+	public function getMethod(\app\common\common $common)
+    {
 
-## 命名规范
+        $common->setName('guomin');
 
-`ThinkPHP5`遵循PSR-2命名规范和PSR-4自动加载规范，并且注意如下规范：
+        return $common->getName();
 
-### 目录和文件
+    }
 
-*   目录不强制规范，驼峰和小写+下划线模式均支持；
-*   类库、函数文件统一以`.php`为后缀；
-*   类的文件名均以命名空间定义，并且命名空间的路径和类库文件所在路径一致；
-*   类名和类文件名保持一致，统一采用驼峰法命名（首字母大写）；
+app\common\common类
 
-### 函数和类、属性命名
-*   类的命名采用驼峰法，并且首字母大写，例如 `User`、`UserType`，默认不需要添加后缀，例如`UserController`应该直接命名为`User`；
-*   函数的命名使用小写字母和下划线（小写字母开头）的方式，例如 `get_client_ip`；
-*   方法的命名使用驼峰法，并且首字母小写，例如 `getUserName`；
-*   属性的命名使用驼峰法，并且首字母小写，例如 `tableName`、`instance`；
-*   以双下划线“__”打头的函数或方法作为魔法方法，例如 `__call` 和 `__autoload`；
+	namespace app\common;
+	class common
+	{
+	
+	    private $name;
+	    public function setName($name)
+	    {
+	        $this->name=$name;
+	    }
+	
+	    public function getName(){
+	
+	        return "方法名是".__METHOD__."属性是".$this->name;
+	
+	    }
+	}
 
-### 常量和配置
-*   常量以大写字母和下划线命名，例如 `APP_PATH`和 `THINK_PATH`；
-*   配置参数以小写字母和下划线命名，例如 `url_route_on` 和`url_convert`；
+绑定类和闭包到容器中
 
-### 数据表和字段
-*   数据表和字段采用小写加下划线方式命名，并注意字段名不要以下划线开头，例如 `think_user` 表和 `user_name`字段，不建议使用驼峰和中文作为数据表字段命名。
+	use think\Container;
+先use think\Container这个类
 
-## 参与开发
-请参阅 [ThinkPHP5 核心框架包](https://github.com/top-think/framework)。
+	public function bindClass(){
+	
+	
+	        Container::set('common','\app\common\common');
+	
+	        $common=Container::get('common',['name'=>'leee']);
+	
+	        return $common->getName();
+	    }
 
-## 版权信息
 
-ThinkPHP遵循Apache2开源协议发布，并提供免费使用。
+绑定一个闭包到容器中
 
-本项目包含的第三方源码和二进制文件之版权信息另行标注。
+	public function bindClosure(){
 
-版权所有Copyright © 2006-2018 by ThinkPHP (http://thinkphp.cn)
+        Container::set('demo',function($demo){
+            return $demo;
+        });
 
-All rights reserved。
+        return Container::get('demo',['demo'=>'demo的值在这里显示']);
+    }
 
-ThinkPHP® 商标和著作权所有者为上海顶想信息科技有限公司。
+## Facade静态代理 ##
 
-更多细节参阅 [LICENSE.txt](LICENSE.txt)
+1. 创建一个类app\common\testfacade.php
+   		namespace app\common;
+
+			class testfacade{
+			    public function index($name='think PHP'){
+			        return $name;
+			    }
+			}
+
+1. 新建文件夹facade,在此文件夹下创建testfacade.php
+		namespace app\facade;
+		use think\Facade;
+		class testfacade extends Facade
+		
+		{
+		    protected static function getFacadeClass()
+		    {
+		        //使用动态绑定时，下面这句代码可以不写
+		     //   return 'app\common\testfacade';
+		
+		    }
+		}
+
+1. 使用静态代理
+
+		use app\common\testfacade;
+		use think\facade; 
+		public function facade(){
+	        //常规调用方法
+	       // $testfacade=new testfacade();
+	
+	        //return $testfacade->index();
+	
+	        //静态代理调用方法
+	
+	      // return \app\facade\testfacade::index('guomin');
+	
+	        //使用动态绑定的方法绑定到facade
+	
+	        Facade::bind('app\facade\testfacade','app\common\testfacade');
+	
+	        return \app\facade\testfacade::index('aaa');
+				
+		 }
